@@ -1,12 +1,12 @@
 import { sentryVitePlugin } from '@sentry/vite-plugin';
-import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path, { resolve } from 'path';
-import makeManifest from './utils/plugins/make-manifest';
-import customDynamicImport from './utils/plugins/custom-dynamic-import';
-import addHmr from './utils/plugins/add-hmr';
-import watchRebuild from './utils/plugins/watch-rebuild';
+import { defineConfig } from 'vite';
 import manifest from './manifest';
+import addHmr from './utils/plugins/add-hmr';
+import customDynamicImport from './utils/plugins/custom-dynamic-import';
+import makeManifest from './utils/plugins/make-manifest';
+import watchRebuild from './utils/plugins/watch-rebuild';
 
 const rootDir = resolve(__dirname);
 const srcDir = resolve(rootDir, 'src');
@@ -41,8 +41,8 @@ export default defineConfig({
     watchRebuild(),
     process.env.SENTRY_DSN &&
       sentryVitePlugin({
-        org: 'monarch',
-        project: 'mint-data-exporter',
+        org: 'jarrett-sorensen',
+        project: 'everydollar-data-exporter',
         telemetry: false,
       }),
   ],

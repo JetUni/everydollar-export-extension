@@ -5,7 +5,7 @@ import packageJson from './package.json';
  */
 const manifest: chrome.runtime.ManifestV3 = {
   manifest_version: 3,
-  name: 'Mint Data Exporter, by Monarch Money',
+  name: 'Everydollar Data Exporter, by Jarrett Sorensen',
   version: packageJson.version,
   description: packageJson.description,
   permissions: ['storage', 'activeTab', 'scripting', 'downloads'],
@@ -16,7 +16,7 @@ const manifest: chrome.runtime.ManifestV3 = {
   action: {
     default_popup: 'src/pages/popup/index.html',
     default_icon: 'icon-34.png',
-    default_title: 'Open Mint Data Exporter',
+    default_title: 'Open Everydollar Data Exporter',
   },
   icons: {
     '128': 'icon-128.png',
@@ -31,7 +31,7 @@ const manifest: chrome.runtime.ManifestV3 = {
         'icon-beta-34.png',
         'icon-beta-128.png',
       ],
-      matches: ['https://mint.intuit.com/*'],
+      matches: ['https://everydollar.com/*'],
     },
   ],
 };

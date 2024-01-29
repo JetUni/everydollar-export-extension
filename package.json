@@ -1,7 +1,8 @@
 {
   "name": "mint-export-extension",
-  "version": "1.0.8",
-  "description": "Browser extension to export your data from Mint. Built by the team at Monarch Money.",
+  "version": "1.0.0",
+  "author": "Jarrett Sorensen",
+  "description": "Browser extension to export your data from Everydollar. Built by Jarrett Sorensen.",
   "scripts": {
     "build": "tsc --noEmit && vite build",
     "build:beta": "tsc --noEmit && cross-env IS_BETA=1 vite build",

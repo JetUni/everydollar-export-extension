@@ -1,19 +1,19 @@
+import Footer from '@root/src/components/Footer';
 import Section from '@root/src/components/Section';
 import SpinnerWithText from '@root/src/components/SpinnerWithText';
 import Text from '@root/src/components/Text';
 import DefaultButton from '@root/src/components/button/DefaultButton';
+import DownloadBalances from '@root/src/components/popup/DownloadBalances';
 import DownloadTransactions from '@root/src/components/popup/DownloadTransactions';
+import OtherResources from '@root/src/components/popup/OtherResources';
 import { ResponseStatus } from '@root/src/pages/popup/Popup';
 import { usePopupContext } from '@root/src/pages/popup/context';
-import React, { useCallback, useMemo } from 'react';
-import stateStorage, { PageKey } from '@root/src/shared/storages/stateStorage';
-import useStorage from '@root/src/shared/hooks/useStorage';
 import { Action, useMessageSender } from '@root/src/shared/hooks/useMessage';
-import Footer from '@root/src/components/Footer';
-import OtherResources from '@root/src/components/popup/OtherResources';
+import useStorage from '@root/src/shared/hooks/useStorage';
 import { fetchAccounts } from '@root/src/shared/lib/accounts';
-import DownloadBalances from '@root/src/components/popup/DownloadBalances';
 import accountStorage, { AccountsDownloadStatus } from '@root/src/shared/storages/accountStorage';
+import stateStorage, { PageKey } from '@root/src/shared/storages/stateStorage';
+import React, { useCallback, useMemo } from 'react';
 
 interface Page {
   title: string;
@@ -191,7 +191,7 @@ const PopupContainer = ({ children }: React.PropsWithChildren) => {
           )
         }>
         <Text type="header" className="text-white">
-          {pageTitle ?? 'Mint Data Exporter'}
+          {pageTitle ?? 'Everydollar Data Exporter'}
         </Text>
       </Section>
       {PageComponent ? (
