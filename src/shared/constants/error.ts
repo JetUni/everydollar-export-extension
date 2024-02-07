@@ -1,4 +1,4 @@
 export enum ErrorCode {
-  MintTabNotFound = 'ERR_MINT_NOT_FOUND',
-  MintApiKeyNotFound = 'ERR_MINT_API_KEY_NOT_FOUND',
+  EverydollarTabNotFound = 'ERR_EVERYDOLLAR_NOT_FOUND',
+  EverydollarUserTokenNotFound = 'ERR_EVERYDOLLAR_USER_TOKEN_NOT_FOUND',
 }

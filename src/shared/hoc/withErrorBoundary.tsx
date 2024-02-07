@@ -1,7 +1,6 @@
+import budgetStorage from '@root/src/shared/storages/budgetStorage';
 import { Component, ComponentType, ReactElement } from 'react';
-import stateStorage from '@root/src/shared/storages/stateStorage';
 
-import * as Sentry from '@sentry/react';
 class ErrorBoundary extends Component<
   {
     children: ReactElement;
@@ -17,9 +16,8 @@ class ErrorBoundary extends Component<
     return { hasError: true };
   }
 
-  componentDidCatch(error, errorInfo) {
-    stateStorage.clear();
-    Sentry.captureException(error, { extra: errorInfo });
+  componentDidCatch() {
+    budgetStorage.clear();
   }
 
   render() {

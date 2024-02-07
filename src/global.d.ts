@@ -1,12 +1,9 @@
 import Chrome from 'chrome';
+import { UserData } from './shared/storages/authStorage';
 
 declare global {
   interface Window {
-    __shellInternal?: {
-      appExperience: {
-        appApiKey: string;
-      };
-    };
+    userData?: UserData;
   }
 }
 

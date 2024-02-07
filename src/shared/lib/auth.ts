@@ -1,50 +1,41 @@
-import apiKeyStorage from '@src/shared/storages/apiKeyStorage';
+import userDataStorage from '@src/shared/storages/authStorage';
 
-const MINT_API_BASE_URL = 'https://mint.intuit.com';
+const EVERYDOLLAR_API_BASE_URL = 'https://api.everydollar.com';
 
-export const makeAuthorizationHeader = (key: string) =>
-  `Intuit_APIKey intuit_apikey=${key},intuit_apikey_version=1.0`;
+export const makeAuthorizationHeader = (token: string) => `Bearer ${token}`;
 
 interface TypedResponse<T> extends Response {
   json(): Promise<T>;
 }
 
-export const makeMintApiRequest = async <T>(
+export const makeEverydollarApiRequest = async <T>(
   path: string,
   options: RequestInit,
   overrideApiKey?: string,
 ): Promise<TypedResponse<T>> => {
-  const apiKey = overrideApiKey ?? (await apiKeyStorage.get());
+  const userToken = overrideApiKey ?? (await userDataStorage.get()).userToken;
 
-  if (!apiKey) {
-    throw new Error('API key not found');
+  if (!userToken) {
+    throw new Error('User Token not found');
   }
 
-  const response = await fetch(`${MINT_API_BASE_URL}${path}`, {
+  const url = `${EVERYDOLLAR_API_BASE_URL}${path}`;
+  const Authorization = `Bearer ${userToken}`;
+  const response = await fetch(url, {
     ...options,
     headers: {
       ...options.headers,
-      Authorization: makeAuthorizationHeader(apiKey),
+      Authorization,
     },
   });
 
   if (!response.ok) {
     if (response.status === 401) {
-      await apiKeyStorage.clear();
+      await userDataStorage.clear();
     }
 
     throw new Error(`Request failed with status ${response.status}`);
   }
 
   return response;
-};
-
-export const getUserData = async (overrideApiKey?: string) => {
-  const response = await makeMintApiRequest<{ userName: string }>(
-    '/pfm/v1/user',
-    { method: 'GET' },
-    overrideApiKey,
-  );
-
-  return response.json();
 };

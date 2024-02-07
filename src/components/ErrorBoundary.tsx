@@ -7,9 +7,9 @@ const ErrorBoundary = ({ children }: React.PropsWithChildren) => (
     <span className="mb-2 text-5xl">🛟</span>
     <Text type="subtitle">{children ?? 'Sorry, something went wrong'}</Text>
     <Text type="header">
-      Please try opening the extension again. If the problem persists, reach out to us at{' '}
-      <a href="mailto:support@monarchmoney.com" className="text-blue">
-        support@monarchmoney.com
+      Please try opening the extension again. If the problem persists, file an issue on{' '}
+      <a href="https://github.com/JetUni/everydollar-export-extension/issues" className="text-blue">
+        GitHub
       </a>
       .
     </Text>

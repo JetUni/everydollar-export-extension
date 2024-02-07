@@ -1,14 +1,11 @@
-import { useRef, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 export enum Action {
   PopupOpened = 'POPUP_OPENED',
-  GetMintApiKey = 'GET_MINT_API_KEY',
-  // Sent by the button in the popup to start downloading transactions
-  RequestTransactionsDownload = 'REQUEST_TRANSACTIONS_DOWNLOAD',
-  DownloadTransactions = 'DOWNLOAD_TRANSACTIONS',
-  DownloadAllAccountBalances = 'DOWNLOAD_ALL_ACCOUNT_BALANCES',
-  DownloadBalancesProgress = 'DOWNLOAD_BALANCES_PROGRESS',
-  DownloadBalancesComplete = 'DOWNLOAD_BALANCES_COMPLETE',
+  GetEverydollarUserToken = 'GET_EVERYDOLLAR_USER_TOKEN',
+  // Sent by the button in the popup to start downloading budgets
+  RequestBudgetsDownload = 'REQUEST_BUDGETS_DOWNLOAD',
+  DownloadBudgets = 'DOWNLOAD_BUDGETS',
   // Debug actions
   DebugThrowError = 'DEBUG_THROW_ERROR',
 }

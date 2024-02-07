@@ -1,18 +1,13 @@
-import Footer from '@root/src/components/Footer';
 import Section from '@root/src/components/Section';
 import SpinnerWithText from '@root/src/components/SpinnerWithText';
 import Text from '@root/src/components/Text';
 import DefaultButton from '@root/src/components/button/DefaultButton';
-import DownloadBalances from '@root/src/components/popup/DownloadBalances';
 import DownloadTransactions from '@root/src/components/popup/DownloadTransactions';
-import OtherResources from '@root/src/components/popup/OtherResources';
 import { ResponseStatus } from '@root/src/pages/popup/Popup';
 import { usePopupContext } from '@root/src/pages/popup/context';
 import { Action, useMessageSender } from '@root/src/shared/hooks/useMessage';
 import useStorage from '@root/src/shared/hooks/useStorage';
-import { fetchAccounts } from '@root/src/shared/lib/accounts';
-import accountStorage, { AccountsDownloadStatus } from '@root/src/shared/storages/accountStorage';
-import stateStorage, { PageKey } from '@root/src/shared/storages/stateStorage';
+import budgetStorage, { PageKey } from '@root/src/shared/storages/budgetStorage';
 import React, { useCallback, useMemo } from 'react';
 
 interface Page {
@@ -21,81 +16,39 @@ interface Page {
 }
 
 const PAGE_TO_COMPONENT: Record<PageKey, Page> = {
-  downloadTransactions: {
-    title: 'Mint Transactions',
+  downloadBudgets: {
+    title: 'Everydollar Budgets',
     component: DownloadTransactions,
-  },
-  downloadBalances: {
-    title: 'Mint Account Balance History',
-    component: DownloadBalances,
   },
 };
 
 const PopupContainer = ({ children }: React.PropsWithChildren) => {
-  const { currentPage, downloadTransactionsStatus } = useStorage(stateStorage);
+  const { currentPage, downloadBudgetsStatus } = useStorage(budgetStorage);
   const { status, userData } = usePopupContext();
   const sendMessage = useMessageSender();
 
-  const onDownloadTransactions = useCallback(async () => {
-    const { downloadTransactionsStatus } = await stateStorage.get();
-    if (downloadTransactionsStatus === AccountsDownloadStatus.Loading) {
-      await stateStorage.patch({
-        currentPage: 'downloadTransactions',
+  const onDownloadBudgets = useCallback(async () => {
+    const { downloadBudgetsStatus } = await budgetStorage.get();
+    if (downloadBudgetsStatus === ResponseStatus.Loading) {
+      await budgetStorage.patch({
+        currentPage: 'downloadBudgets',
       });
       return;
     }
-    await stateStorage.patch({
-      currentPage: 'downloadTransactions',
-      downloadTransactionsStatus: ResponseStatus.Loading,
-      totalTransactionsCount: undefined,
+    await budgetStorage.patch({
+      currentPage: 'downloadBudgets',
+      downloadBudgetsStatus: ResponseStatus.Loading,
+      totalBudgetsCount: undefined,
     });
-    const result = await sendMessage<{ count?: number }>({ action: Action.DownloadTransactions });
+    const result = await sendMessage<{ count?: number }>({ action: Action.DownloadBudgets });
     if (result?.count) {
-      await stateStorage.patch({
-        downloadTransactionsStatus: ResponseStatus.Success,
-        totalTransactionsCount: result.count,
+      await budgetStorage.patch({
+        downloadBudgetsStatus: ResponseStatus.Success,
+        totalBudgetsCount: result.count,
       });
     } else {
-      await stateStorage.patch({ downloadTransactionsStatus: ResponseStatus.Error });
+      await budgetStorage.patch({ downloadBudgetsStatus: ResponseStatus.Error });
     }
-  }, [sendMessage]);
-
-  const onDownloadAccountBalanceHistory = useCallback(async () => {
-    const { status } = await accountStorage.get();
-    if (status === AccountsDownloadStatus.Loading) {
-      await stateStorage.patch({
-        currentPage: 'downloadBalances',
-      });
-      return;
-    }
-    await accountStorage.clear();
-
-    await stateStorage.patch({
-      currentPage: 'downloadBalances',
-      downloadTransactionsStatus: undefined,
-      totalTransactionsCount: undefined,
-    });
-
-    await accountStorage.patch({ status: AccountsDownloadStatus.Loading });
-
-    try {
-      const mintAccounts = await fetchAccounts({ offset: 0 });
-      await accountStorage.patch({
-        status: AccountsDownloadStatus.Loading,
-        progress: {
-          totalAccounts: mintAccounts.length,
-          completedAccounts: 0,
-          completePercentage: 0,
-        },
-        successCount: 0,
-        errorCount: 0,
-      });
-    } catch (error) {
-      await accountStorage.patch({ status: AccountsDownloadStatus.Error });
-    }
-
-    // The result of this message is handled by the DownloadBalances component
-    await sendMessage({ action: Action.DownloadAllAccountBalances });
   }, [sendMessage]);
 
   const content = useMemo(() => {
@@ -107,27 +60,24 @@ const PopupContainer = ({ children }: React.PropsWithChildren) => {
         return (
           <div className="flex flex-col gap-2 text-center">
             <Text type="subtitle" className="block">
-              Open Mint Dashboard
+              Open Everydollar Dashboard
             </Text>
             <Text className="font-medium">
-              We couldn&apos;t get your Mint user information. Please ensure you have a tab with the
-              Mint dashboard open and try opening the extension again.
+              We couldn&apos;t get your Everydollar user information. Please ensure you have a tab
+              with the Everydollar dashboard open and try opening the extension again.
             </Text>
-            <DefaultButton href="https://mint.intuit.com/overview">
-              Go to Mint dashboard
+            <DefaultButton href="https://everydollar.com/app/budget">
+              Go to Everydollar dashboard
             </DefaultButton>
           </div>
         );
       case ResponseStatus.Success:
         return (
           <div className="flex flex-col gap-2 text-center">
-            <Text type="subtitle">Logged in to Mint</Text>
-            <Text type="header">{userData?.userName}</Text>
-            <DefaultButton onClick={onDownloadTransactions}>
-              Download Mint transactions
-            </DefaultButton>
-            <DefaultButton onClick={onDownloadAccountBalanceHistory}>
-              Download Mint account balance history
+            <Text type="subtitle">Logged in to Everydollar</Text>
+            <Text type="header">{userData?.email}</Text>
+            <DefaultButton onClick={onDownloadBudgets}>
+              Download Everydollar budget history
             </DefaultButton>
           </div>
         );
@@ -138,40 +88,23 @@ const PopupContainer = ({ children }: React.PropsWithChildren) => {
           </div>
         );
     }
-  }, [status, userData?.userName, onDownloadTransactions, onDownloadAccountBalanceHistory]);
+  }, [status, userData, onDownloadBudgets]);
 
   const { component: PageComponent, title: pageTitle } = PAGE_TO_COMPONENT[currentPage] ?? {};
 
   // 💀
   const showBackArrow =
-    currentPage === 'downloadTransactions'
-      ? downloadTransactionsStatus !== ResponseStatus.Loading
-      : currentPage === 'downloadBalances'
-      ? downloadTransactionsStatus !== ResponseStatus.Loading
+    currentPage === 'downloadBudgets'
+      ? downloadBudgetsStatus !== ResponseStatus.Loading
       : !!currentPage; // there's a page that's not index (index is undefined)
 
   // Make sure it's actually running
-  if (currentPage === 'downloadBalances') {
-    const {
-      status,
-      progress: { completePercentage },
-    } = accountStorage.getSnapshot();
-    if (status === AccountsDownloadStatus.Loading) {
-      setTimeout(async () => {
-        const { progress } = await accountStorage.get();
-        if (completePercentage === progress.completePercentage) {
-          await accountStorage.patch({
-            status: AccountsDownloadStatus.Error,
-          });
-        }
-      }, 15_000);
-    }
-  } else if (currentPage === 'downloadTransactions') {
+  if (currentPage === 'downloadBudgets') {
     setTimeout(async () => {
-      const { downloadTransactionsStatus } = await stateStorage.get();
-      if (downloadTransactionsStatus === AccountsDownloadStatus.Loading) {
-        await stateStorage.patch({
-          downloadTransactionsStatus: AccountsDownloadStatus.Error,
+      const { downloadBudgetsStatus } = await budgetStorage.get();
+      if (downloadBudgetsStatus === ResponseStatus.Loading) {
+        await budgetStorage.patch({
+          downloadBudgetsStatus: ResponseStatus.Error,
         });
       }
     }, 30_000);
@@ -183,7 +116,7 @@ const PopupContainer = ({ children }: React.PropsWithChildren) => {
         className="border-b-0 bg-greenSpecial"
         left={
           showBackArrow && (
-            <button onClick={() => stateStorage.patch({ currentPage: undefined })}>
+            <button onClick={() => budgetStorage.patch({ currentPage: undefined })}>
               <Text type="header" className="text-white">
                 ←
               </Text>
@@ -199,12 +132,8 @@ const PopupContainer = ({ children }: React.PropsWithChildren) => {
       ) : (
         <div>
           <div className="p-large">{content}</div>
-          <div>
-            <OtherResources />
-          </div>
         </div>
       )}
-      <Footer />
       <div>{children}</div>
     </div>
   );

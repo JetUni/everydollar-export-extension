@@ -31,9 +31,10 @@ const manifest: chrome.runtime.ManifestV3 = {
         'icon-beta-34.png',
         'icon-beta-128.png',
       ],
-      matches: ['https://everydollar.com/*'],
+      matches: ['https://www.everydollar.com/*'],
     },
   ],
+  host_permissions: ['https://www.everydollar.com/*'],
 };
 
 export default manifest;

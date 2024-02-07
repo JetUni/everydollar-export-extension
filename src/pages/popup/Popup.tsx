@@ -2,33 +2,14 @@ import ErrorBoundary from '@root/src/components/ErrorBoundary';
 import Text from '@root/src/components/Text';
 import DefaultButton from '@root/src/components/button/DefaultButton';
 import PopupContext from '@root/src/pages/popup/context';
-import stateStorage from '@root/src/shared/storages/stateStorage';
+import budgetStorage from '@root/src/shared/storages/budgetStorage';
 import PopupContainer from '@src/components/popup/PopupContainer';
 import { ErrorCode } from '@src/shared/constants/error';
 import withErrorBoundary from '@src/shared/hoc/withErrorBoundary';
 import withSuspense from '@src/shared/hoc/withSuspense';
 import { Action, useMessageSender } from '@src/shared/hooks/useMessage';
-import { getUserData } from '@src/shared/lib/auth';
-import apiKeyStorage from '@src/shared/storages/apiKeyStorage';
+import userDataStorage, { UserData } from '@src/shared/storages/authStorage';
 import { useEffect, useMemo, useState } from 'react';
-
-import * as Sentry from '@sentry/react';
-
-Sentry.init({
-  dsn: import.meta.env.VITE_SENTRY_DSN,
-  environment: import.meta.env.MODE,
-  release: import.meta.env.VITE_COMMIT_SHA,
-  tracesSampleRate: 1.0,
-  beforeSend(event) {
-    if (event.user) {
-      // Do not send user data to Sentry
-      delete event.user.ip_address;
-      delete event.user.segment;
-      delete event.user.id;
-    }
-    return event;
-  },
-});
 
 export enum ResponseStatus {
   RequireAuth = 'require_auth',
@@ -44,7 +25,7 @@ const Popup = () => {
   const [status, setStatus] = useState<ResponseStatus>(ResponseStatus.Loading);
   const [errorMessage, setErrorMessage] = useState<string>(null);
 
-  const [userData, setUserData] = useState<Record<string, string>>({});
+  const [userData, setUserData] = useState<UserData>(undefined);
 
   useEffect(() => {
     if (status === ResponseStatus.Loading) {
@@ -53,57 +34,45 @@ const Popup = () => {
   }, [status]);
 
   const resetExtensionState = async () => {
-    await apiKeyStorage.clear();
-    await stateStorage.clear();
+    await userDataStorage.clear();
+    await budgetStorage.clear();
     setUserData(null);
     setStatus(ResponseStatus.Loading);
   };
 
-  const authenticateUser = async (apiKey: string) => {
-    try {
-      const userData = await getUserData(apiKey);
-      setUserData(userData);
-
-      await apiKeyStorage.set(apiKey);
-      setStatus(ResponseStatus.Success);
-    } catch (error) {
-      setStatus(ResponseStatus.Error);
-      setErrorMessage(
-        "We couldn't get your user data. Please ensure you have a tab with the Mint dashboard open.",
-      );
-    }
-  };
-
   const handlePopupOpened = async () => {
-    const response = await sendMessage<{ status: ResponseStatus; apiKey?: string }>({
+    const response = await sendMessage<{ status: ResponseStatus; userData?: UserData }>({
       action: Action.PopupOpened,
     });
+    console.log('handle popup opened response', response);
 
     if (!response) {
       setStatus(ResponseStatus.Error);
       return;
     }
 
-    const { status, apiKey } = response;
+    const { status } = response;
     if (status === ResponseStatus.RequireAuth) {
       authenticateOnDashboard();
     } else {
-      await authenticateUser(apiKey);
+      setStatus(ResponseStatus.Success);
     }
   };
 
   const authenticateOnDashboard = async () => {
     try {
+      console.log('sending message to get everydollar user token');
       const response = await sendMessage<{ success: boolean; apiKey?: string; error?: ErrorCode }>({
-        action: Action.GetMintApiKey,
+        action: Action.GetEverydollarUserToken,
       });
 
-      await authenticateUser(response.apiKey);
+      console.log('everydollar user token response', response);
+      setStatus(ResponseStatus.Success);
     } catch ({ error }) {
-      if (error === ErrorCode.MintTabNotFound) {
+      if (error === ErrorCode.EverydollarTabNotFound) {
         // User hasn't opened the popup in the dashboard, show message
         setStatus(ResponseStatus.RequireAuth);
-      } else if (error === ErrorCode.MintApiKeyNotFound) {
+      } else if (error === ErrorCode.EverydollarUserTokenNotFound) {
         // User is not logged into Mint, show message to open Mint and login
         setStatus(ResponseStatus.Error);
         setErrorMessage('Please login to Mint and open this popup again.');
@@ -139,7 +108,6 @@ const Popup = () => {
 
 const BrokenComponent = () => {
   throw new Error('Broken component');
-  return null;
 };
 
 export default withErrorBoundary(withSuspense(Popup, <div>Loading...</div>), <ErrorBoundary />);
